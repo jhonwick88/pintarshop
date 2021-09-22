@@ -2,6 +2,7 @@ package config
 
 import (
 	"math"
+	"pintarshop/models"
 
 	"gorm.io/gorm"
 )
@@ -32,7 +33,7 @@ type Paginator struct {
 }
 
 func Paging(p *Param, result interface{}) *Paginator {
-	db := p.DB
+	db := models.DB
 
 	if p.ShowSQL {
 		db = db.Debug()

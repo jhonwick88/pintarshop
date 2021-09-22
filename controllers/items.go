@@ -63,6 +63,39 @@ func CreateItem(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "success", "data": item})
 }
 
+func FindCustomItems(c *gin.Context) {
+	var pageInfo config.PageInfo
+	_ = c.ShouldBindQuery(&pageInfo)
+	if err := config.Verify(pageInfo, config.PageInfoVerify); err != nil {
+		config.FailWithMessage(err.Error(), c)
+		return
+	}
+	err, listItems, total := getItemsData(pageInfo)
+
+	if err != nil {
+		config.FailWithMessage("Fail bro", c)
+	} else {
+		config.OkWithDetailed(config.PageResult{
+			List:     listItems,
+			Total:    total,
+			Page:     pageInfo.Page,
+			PageSize: pageInfo.PageSize,
+		}, "Success", c)
+	}
+
+}
+
+func getItemsData(pageInfo config.PageInfo) (err error, list interface{}, total int64) {
+	limit := pageInfo.PageSize
+	offset := pageInfo.PageSize * (pageInfo.Page - 1)
+	db := models.DB.Model(&models.Item{})
+
+	db.Count(&total)
+	var items []models.Item
+	err = db.Limit(limit).Offset(offset).Find(&items).Error
+	return err, items, total
+}
+
 func FindItems(c *gin.Context) {
 	var items []models.Item
 	//var total int64

@@ -17,7 +17,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{"message": "Api is ready"})
 	})
 	r.POST("/items", controllers.CreateItem)
-	r.GET("/items", controllers.FindItems)
+	r.GET("/items", controllers.FindCustomItems)
 	r.GET("/items/:id", controllers.FindItem)
 	r.PATCH("/items/:id", controllers.UpdateItem)
 	r.DELETE("/items/:id", controllers.DeleteItem)
