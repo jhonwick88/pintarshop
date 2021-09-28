@@ -2,13 +2,11 @@ package controllers
 
 import (
 	"net/http"
+	"pintarshop/config"
 	"pintarshop/models"
 	"strconv"
 
-	"pintarshop/config"
-
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
 type CreateItemInput struct {
@@ -26,33 +24,12 @@ type UpdateItemInput struct {
 	Stock         uint8  `json:"stock"`
 }
 
-func Paginate(page, pageSize int) func(db *gorm.DB) *gorm.DB {
-	return func(db *gorm.DB) *gorm.DB {
-		//page, _ := strconv.Atoi(c.Query("page"))
-
-		if page == 0 {
-			page = 1
-		}
-
-		//pageSize, _ := strconv.Atoi(c.Query("limit"))
-		switch {
-		case pageSize > 100:
-			pageSize = 100
-		case pageSize <= 0:
-			pageSize = 10
-		}
-
-		offset := (page - 1) * pageSize
-		return db.Offset(offset).Limit(pageSize)
-	}
-}
 func CreateItem(c *gin.Context) {
 	var createItem CreateItemInput
 	if err := c.ShouldBindJSON(&createItem); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"code": 1, "message": err.Error(), "data": ""})
+		config.FailWithMessage(err.Error(), c)
 		return
 	}
-
 	item := models.Item{
 		Name:          createItem.Name,
 		Price:         createItem.Price,
@@ -60,7 +37,7 @@ func CreateItem(c *gin.Context) {
 		Description:   createItem.Description,
 		Stock:         createItem.Stock}
 	models.DB.Create(&item)
-	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "success", "data": item})
+	config.OkWithData(item, c)
 }
 
 func FindCustomItems(c *gin.Context) {
@@ -71,28 +48,30 @@ func FindCustomItems(c *gin.Context) {
 		return
 	}
 	err, listItems, total := getItemsData(pageInfo)
-
 	if err != nil {
 		config.FailWithMessage("Fail bro", c)
 	} else {
+		paginHelper := config.GetPaginHelper(pageInfo, total)
 		config.OkWithDetailed(config.PageResult{
-			List:     listItems,
-			Total:    total,
-			Page:     pageInfo.Page,
-			PageSize: pageInfo.PageSize,
+			List:      listItems,
+			Total:     total,
+			Page:      pageInfo.Page,
+			Limit:     pageInfo.Limit,
+			TotalPage: paginHelper.TotalPage,
+			PrevPage:  paginHelper.PrevPage,
+			NextPage:  paginHelper.NextPage,
 		}, "Success", c)
 	}
 
 }
 
 func getItemsData(pageInfo config.PageInfo) (err error, list interface{}, total int64) {
-	limit := pageInfo.PageSize
-	offset := pageInfo.PageSize * (pageInfo.Page - 1)
+	limit := pageInfo.Limit
+	offset := pageInfo.Limit * (pageInfo.Page - 1)
 	db := models.DB.Model(&models.Item{})
-
 	db.Count(&total)
 	var items []models.Item
-	err = db.Limit(limit).Offset(offset).Find(&items).Error
+	err = db.Limit(limit).Offset(offset).Where("name LIKE ?", "%"+pageInfo.Search+"%").Order("name asc").Find(&items).Error
 	return err, items, total
 }
 
@@ -118,34 +97,32 @@ func FindItems(c *gin.Context) {
 func FindItem(c *gin.Context) {
 	var item models.Item
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&item).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		config.FailWithMessage("Record not found!", c)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "success", "data": item})
-
+	config.OkWithData(item, c)
 }
 func UpdateItem(c *gin.Context) {
 	var item models.Item
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&item).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		config.FailWithMessage("Record not found!", c)
 	}
 
 	var input UpdateItemInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		config.FailWithMessage(err.Error(), c)
 		return
 	}
 
 	models.DB.Model(&item).Updates(input)
-	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "success", "data": item})
+	config.OkWithData(item, c)
 }
 func DeleteItem(c *gin.Context) {
 	var item models.Item
 	if err := models.DB.Where("id = ?", c.Param("id")).First(&item).Error; err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Record not found!"})
+		config.FailWithMessage("Record not found!", c)
 		return
 	}
 	models.DB.Delete(&item)
-
-	c.JSON(http.StatusOK, gin.H{"code": 0, "message": "success deleted", "data": ""})
+	config.OkWithMessage("Succes Deleted", c)
 }

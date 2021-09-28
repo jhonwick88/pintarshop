@@ -13,10 +13,13 @@ type Response struct {
 }
 
 type PageResult struct {
-	List     interface{} `json:"list"`
-	Total    int64       `json:"total"`
-	Page     int         `json:"page"`
-	PageSize int         `json:"pageSize"`
+	List      interface{} `json:"list"`
+	Total     int64       `json:"total_record"`
+	Page      int         `json:"page"`
+	Limit     int         `json:"limit"`
+	TotalPage int         `json:"total_page"`
+	PrevPage  int         `json:"prev_page"`
+	NextPage  int         `json:"next_page"`
 }
 
 const (
