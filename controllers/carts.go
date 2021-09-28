@@ -15,6 +15,9 @@ type AddCartInput struct {
 	Qty        uint8  `json:"qty" binding:"required"`
 	UserID     uint   `json:"user_id" binding:"required"`
 }
+type SelectIds struct {
+	Ids []uint `json:"ids" binding:"required"`
+}
 
 func AddToCart(c *gin.Context) {
 	var carts AddCartInput
@@ -77,8 +80,23 @@ func getCartsData(pageInfo config.PageInfo, userId uint) (err error, list interf
 	return err, items, total
 }
 func RemoveCartbyIds(c *gin.Context) {
-
+	var ids SelectIds
+	if err := c.ShouldBindJSON(&ids); err != nil {
+		config.FailWithMessage(err.Error(), c)
+	}
+	var cartItems models.CartItem
+	if err := models.DB.Delete(&cartItems, ids.Ids).Error; err != nil {
+		config.FailWithMessage(err.Error(), c)
+	}
+	config.OkWithMessage("Selected item has removed", c)
 }
-func RemoveCart(c *gin.Context) {
 
+func RemoveCart(c *gin.Context) {
+	var item models.CartItem
+	if err := models.DB.Where("id = ?", c.Param("id")).First(&item).Error; err != nil {
+		config.FailWithMessage("Record not found!", c)
+		return
+	}
+	models.DB.Delete(&item)
+	config.OkWithMessage("Cart Deleted", c)
 }
