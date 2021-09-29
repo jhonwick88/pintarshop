@@ -1,4 +1,4 @@
-module pintarshop
+module github.com/jhonwick88/pintarshop
 
 go 1.17
 

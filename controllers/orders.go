@@ -1,9 +1,10 @@
 package controllers
 
 import (
-	"pintarshop/config"
-	"pintarshop/models"
 	"strconv"
+
+	"github.com/jhonwick88/pintarshop/config"
+	"github.com/jhonwick88/pintarshop/models"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -21,6 +22,7 @@ type CreateOrderInput struct {
 	UserID       uint                 `json:"user_id" binding:"required"`
 	CustomerID   uint                 `json:"customer_id" binding:"required"`
 	OrderDetails []models.OrderDetail `json:"order_details"`
+	CartId       []uint               `json:"cart_id" binding:"required"`
 }
 type UpdateOrderInput struct {
 	ID     uint   `json:"id"`
@@ -57,6 +59,7 @@ func CreateOrder(c *gin.Context) {
 	err := models.DB.Preload(clause.Associations).Create(&order).Error
 	if err != nil {
 		updateStock(createOrder.OrderDetails)
+		models.DB.Delete(&models.CartItem{}, createOrder.CartId)
 	}
 	config.OkWithData(order, c)
 }

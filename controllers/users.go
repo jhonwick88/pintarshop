@@ -1,10 +1,9 @@
 package controllers
 
 import (
-	"pintarshop/config"
-	"pintarshop/models"
-
 	"github.com/gin-gonic/gin"
+	"github.com/jhonwick88/pintarshop/config"
+	"github.com/jhonwick88/pintarshop/models"
 )
 
 type CreateUserInput struct {
@@ -37,6 +36,7 @@ func CreateUser(c *gin.Context) {
 	models.DB.Create(&user)
 	config.OkWithData(user, c)
 }
+
 func FindUsers(c *gin.Context) {
 	var pageInfo config.PageInfo
 	_ = c.ShouldBindQuery(&pageInfo)

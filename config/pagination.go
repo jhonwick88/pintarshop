@@ -2,7 +2,8 @@ package config
 
 import (
 	"math"
-	"pintarshop/models"
+
+	"github.com/jhonwick88/pintarshop/models"
 
 	"gorm.io/gorm"
 )

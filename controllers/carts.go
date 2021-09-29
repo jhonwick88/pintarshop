@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"pintarshop/config"
-	"pintarshop/models"
+	"github.com/jhonwick88/pintarshop/models"
+
+	"github.com/jhonwick88/pintarshop/config"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm/clause"
@@ -84,8 +85,8 @@ func RemoveCartbyIds(c *gin.Context) {
 	if err := c.ShouldBindJSON(&ids); err != nil {
 		config.FailWithMessage(err.Error(), c)
 	}
-	var cartItems models.CartItem
-	if err := models.DB.Delete(&cartItems, ids.Ids).Error; err != nil {
+	//var cartItems models.CartItem
+	if err := models.DB.Delete(&models.CartItem{}, ids.Ids).Error; err != nil {
 		config.FailWithMessage(err.Error(), c)
 	}
 	config.OkWithMessage("Selected item has removed", c)

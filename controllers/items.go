@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"net/http"
-	"pintarshop/config"
-	"pintarshop/models"
 	"strconv"
+
+	"github.com/jhonwick88/pintarshop/config"
+	"github.com/jhonwick88/pintarshop/models"
 
 	"github.com/gin-gonic/gin"
 )

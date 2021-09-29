@@ -2,8 +2,9 @@ package main
 
 import (
 	"net/http"
-	"pintarshop/controllers"
-	"pintarshop/models"
+
+	"github.com/jhonwick88/pintarshop/controllers"
+	"github.com/jhonwick88/pintarshop/models"
 
 	"github.com/gin-gonic/gin"
 )

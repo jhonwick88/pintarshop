@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"pintarshop/config"
-	"pintarshop/models"
+	"github.com/jhonwick88/pintarshop/config"
+	"github.com/jhonwick88/pintarshop/models"
 
 	"github.com/gin-gonic/gin"
 )
