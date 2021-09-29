@@ -1,9 +1,8 @@
 package main
 
 import (
-	"net/http"
-
 	"github.com/jhonwick88/pintarshop/controllers"
+	"github.com/jhonwick88/pintarshop/middlewares"
 	"github.com/jhonwick88/pintarshop/models"
 
 	"github.com/gin-gonic/gin"
@@ -11,12 +10,18 @@ import (
 
 func main() {
 
-	r := gin.Default()
+	a := gin.Default()
 	models.ConnectDatabase()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"message": "Api is ready"})
-	})
+	// r.GET("/", func(c *gin.Context) {
+	// 	c.JSON(http.StatusOK, gin.H{"message": "Api is ready"})
+	// })
+	b := a.Group("/api/v1/auth")
+	b.POST("/login", controllers.Login)
+	b.POST("/register", controllers.Register)
+
+	r := a.Group("/api/v1")
+	r.Use(middlewares.SetMiddlewareAuthentication())
 	//items
 	r.POST("/items", controllers.CreateItem)
 	r.GET("/items", controllers.FindCustomItems)
@@ -52,5 +57,5 @@ func main() {
 	r.GET("/users/:id", controllers.FindUser)
 	r.PATCH("/users/:id", controllers.UpdateUser)
 	r.DELETE("/users/:id", controllers.DeleteUser)
-	r.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
+	a.Run() // listen and serve on 0.0.0.0:8080 (for windows "localhost:8080")
 }

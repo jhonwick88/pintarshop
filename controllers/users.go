@@ -6,6 +6,10 @@ import (
 	"github.com/jhonwick88/pintarshop/models"
 )
 
+type LoginUserInput struct {
+	Email    string `json:"email" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
 type CreateUserInput struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`

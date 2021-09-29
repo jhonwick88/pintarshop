@@ -3,17 +3,74 @@ package controllers
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"log"
-	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
+	"github.com/jhonwick88/pintarshop/config"
+	"github.com/jhonwick88/pintarshop/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
-func CreateToken(user_id uint32) (string, error) {
+func Register(c *gin.Context) {
+	var createUser CreateUserInput
+	if err := c.ShouldBindJSON(&createUser); err != nil {
+		config.FailWithMessage(err.Error(), c)
+		return
+	}
+	user := models.User{
+		Username: html.EscapeString(strings.TrimSpace(createUser.Username)),
+		Password: createUser.Password,
+		NickName: html.EscapeString(strings.TrimSpace(createUser.NickName)),
+		Email:    html.EscapeString(strings.TrimSpace(createUser.Email)),
+		Role:     1,
+	}
+	err := user.Validate("")
+	if err != nil {
+		config.FailWithMessage(err.Error(), c)
+	}
+	userCreated, err := user.SaveUser(models.DB)
+	if err != nil {
+		config.FailWithMessage("Created user failed", c)
+		return
+	}
+	config.OkWithDetailed(userCreated, "Register success", c)
+}
+func Login(c *gin.Context) {
+	var userLoginInput LoginUserInput
+	if err := c.ShouldBindJSON(&userLoginInput); err != nil {
+		config.FailWithMessage(err.Error(), c)
+	}
+	user := models.User{
+		Email:    userLoginInput.Email,
+		Password: userLoginInput.Password,
+	}
+	err := user.Validate("login")
+	if err != nil {
+		config.FailWithMessage(err.Error(), c)
+		return
+	}
+	var userx models.User
+	if err := models.DB.Where("email = ?", user.Email).First(&userx).Error; err != nil {
+		config.FailWithMessage("Record not found!", c)
+		return
+	}
+	err = models.VerifyPassword(userx.Password, user.Password)
+
+	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
+		config.FailWithMessage(err.Error(), c)
+		return
+	}
+	token, _ := CreateToken(userx.ID)
+	esteh := gin.H{"user": userx, "token": token}
+	config.OkWithDetailed(esteh, "Login successfully", c)
+}
+func CreateToken(user_id uint) (string, error) {
 	claims := jwt.MapClaims{}
 	claims["authorized"] = true
 	claims["user_id"] = user_id
@@ -23,8 +80,8 @@ func CreateToken(user_id uint32) (string, error) {
 
 }
 
-func TokenValid(r *http.Request) error {
-	tokenString := ExtractToken(r)
+func TokenValid(c *gin.Context) error {
+	tokenString := ExtractToken(c)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
@@ -40,20 +97,20 @@ func TokenValid(r *http.Request) error {
 	return nil
 }
 
-func ExtractToken(r *http.Request) string {
-	keys := r.URL.Query()
-	token := keys.Get("token")
+func ExtractToken(r *gin.Context) string {
+	// := r.URL.Query()
+	token, _ := r.GetQuery("token")
 	if token != "" {
 		return token
 	}
-	bearerToken := r.Header.Get("Authorization")
+	bearerToken := r.GetHeader("Authorization")
 	if len(strings.Split(bearerToken, " ")) == 2 {
 		return strings.Split(bearerToken, " ")[1]
 	}
 	return ""
 }
 
-func ExtractTokenID(r *http.Request) (uint32, error) {
+func ExtractTokenID(r *gin.Context) (uint, error) {
 
 	tokenString := ExtractToken(r)
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -71,7 +128,7 @@ func ExtractTokenID(r *http.Request) (uint32, error) {
 		if err != nil {
 			return 0, err
 		}
-		return uint32(uid), nil
+		return uint(uid), nil
 	}
 	return 0, nil
 }
