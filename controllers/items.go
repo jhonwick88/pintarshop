@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -54,7 +53,6 @@ func FindCustomItems(c *gin.Context) {
 		config.FailWithMessage("Fail bro", c)
 	} else {
 		paginHelper := config.GetPaginHelper(pageInfo, total)
-		user_id, _ := ExtractTokenID(c)
 		config.OkWithDetailed(config.PageResult{
 			List:      listItems,
 			Total:     total,
@@ -63,7 +61,7 @@ func FindCustomItems(c *gin.Context) {
 			TotalPage: paginHelper.TotalPage,
 			PrevPage:  paginHelper.PrevPage,
 			NextPage:  paginHelper.NextPage,
-		}, fmt.Sprint(user_id), c)
+		}, "success", c)
 	}
 
 }

@@ -1,18 +1,60 @@
 package models
 
 import (
+	"fmt"
+	"log"
+
 	"gorm.io/driver/mysql"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-func ConnectDatabase() {
-	dsn := "root:@tcp(127.0.0.1:3306)/pintarshop?charset=utf8mb4&parseTime=True&loc=Local"
-	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
-	if err != nil {
-		panic("Failed to connect database broh")
+func ConnectDatabase(Dbdriver, DbUser, DbPassword, DbPort, DbHost, DbName string) {
+	if Dbdriver == "mysql" {
+		DBURL := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local", DbUser, DbPassword, DbHost, DbPort, DbName)
+		db, err := gorm.Open(mysql.Open(DBURL), &gorm.Config{})
+		if err != nil {
+			fmt.Printf("Cannot connect to %s database", Dbdriver)
+			log.Fatal("This is the error:", err)
+		} else {
+			fmt.Printf("We are connected to the %s database", Dbdriver)
+		}
+		DB = db
 	}
+	if Dbdriver == "postgres" {
+		DBURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
+		db, err := gorm.Open(postgres.Open(DBURL), &gorm.Config{})
+		if err != nil {
+			fmt.Printf("Cannot connect to %s database", Dbdriver)
+			log.Fatal("This is the error:", err)
+		} else {
+			fmt.Printf("We are connected to the %s database", Dbdriver)
+		}
+		DB = db
+	}
+	// if Dbdriver == "sqlite3" {
+	// 	//DBURL := fmt.Sprintf("host=%s port=%s user=%s dbname=%s sslmode=disable password=%s", DbHost, DbPort, DbUser, DbName, DbPassword)
+	// 	db, err := gorm.Open(sqlite.Open(DbName), &gorm.Config{})
+	// 	if err != nil {
+	// 		fmt.Printf("Cannot connect to %s database\n", Dbdriver)
+	// 		log.Fatal("This is the error:", err)
+	// 	} else {
+	// 		fmt.Printf("We are connected to the %s database\n", Dbdriver)
+	// 	}
+	// 	db.Exec("PRAGMA foreign_keys = ON")
+	// 	DB = db
+	// }
+	// dsn := "root:@tcp(127.0.0.1:3306)/pintarshop?charset=utf8mb4&parseTime=True&loc=Local"
+	// db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	// if err != nil {
+	// 	fmt.Printf("Cannot connect to %s database", Dbdriver)
+	// 		log.Fatal("This is the error:", err)
+	// }
+	// else {
+	// 	fmt.Printf("We are connected to the %s database", Dbdriver)
+	// }
 
 	//db.AutoMigrate(&Item{})
 	//db.AutoMigrate(&ItemCategory{})
@@ -66,6 +108,5 @@ func ConnectDatabase() {
 	// 	ItemID:     3,
 	// })
 	//db.Create(&Item{Name: "Buku Sidu 38", Price: 3000, PriceOriginal: 2500, Stock: 100, Description: "Buku Sinar Dunia"})
-	DB = db
 
 }

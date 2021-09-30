@@ -10,7 +10,7 @@ func SetMiddlewareAuthentication() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		err := controllers.TokenValid(c)
 		if err != nil {
-			config.FailWithMessage("Unauthorizedsss", c)
+			config.FailWithMessage("Unauthorized", c)
 			c.Abort()
 			return
 		}

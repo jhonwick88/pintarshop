@@ -14,7 +14,6 @@ type AddCartInput struct {
 	OptionName string `json:"option_name"`
 	ItemID     uint   `json:"item_id" binding:"required"`
 	Qty        uint8  `json:"qty" binding:"required"`
-	UserID     uint   `json:"user_id" binding:"required"`
 }
 type SelectIds struct {
 	Ids []uint `json:"ids" binding:"required"`
@@ -26,13 +25,14 @@ func AddToCart(c *gin.Context) {
 		config.FailWithMessage(err.Error(), c)
 	}
 	var item models.CartItem
-	if err := models.DB.Preload(clause.Associations).Where(map[string]interface{}{"user_id": carts.UserID, "item_id": carts.ItemID}).First(&item).Error; err != nil {
+	userid, _ := ExtractTokenID(c)
+	if err := models.DB.Preload(clause.Associations).Where(map[string]interface{}{"user_id": userid, "item_id": carts.ItemID}).First(&item).Error; err != nil {
 		cartsItem := models.CartItem{
 			OptionID:   carts.OptionID,
 			OptionName: carts.OptionName,
 			ItemID:     carts.ItemID,
 			Qty:        carts.Qty,
-			UserID:     carts.UserID,
+			UserID:     userid,
 		}
 		models.DB.Create(&cartsItem)
 	} else {
@@ -54,7 +54,8 @@ func ListCarts(c *gin.Context) {
 	getListCart(pageInfo, c)
 }
 func getListCart(pageInfo config.PageInfo, c *gin.Context) {
-	var userid uint = 1
+	userid, _ := ExtractTokenID(c)
+	//var userid uint = 1
 	err, listItems, total := getCartsData(pageInfo, userid)
 	if err != nil {
 		config.FailWithMessage("Fail bro", c)

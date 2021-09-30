@@ -1,21 +1,24 @@
 package main
 
 import (
+	"log"
+	"os"
+
 	"github.com/jhonwick88/pintarshop/controllers"
 	"github.com/jhonwick88/pintarshop/middlewares"
 	"github.com/jhonwick88/pintarshop/models"
+	"github.com/joho/godotenv"
 
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-
 	a := gin.Default()
-	models.ConnectDatabase()
-
-	// r.GET("/", func(c *gin.Context) {
-	// 	c.JSON(http.StatusOK, gin.H{"message": "Api is ready"})
-	// })
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+	models.ConnectDatabase(os.Getenv("DB_DRIVER"), os.Getenv("DB_USER"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_PORT"), os.Getenv("DB_HOST"), os.Getenv("DB_NAME"))
 	b := a.Group("/api/v1/auth")
 	b.POST("/login", controllers.Login)
 	b.POST("/register", controllers.Register)
