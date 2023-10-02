@@ -22,7 +22,8 @@ func main() {
 	b := a.Group("/api/v1/auth")
 	b.POST("/login", controllers.Login)
 	b.POST("/register", controllers.Register)
-
+	f := a.Group("/api/check")
+	f.GET("/customers/:id", controllers.FindCustomer)
 	r := a.Group("/api/v1")
 	r.Use(middlewares.SetMiddlewareAuthentication())
 	//items
